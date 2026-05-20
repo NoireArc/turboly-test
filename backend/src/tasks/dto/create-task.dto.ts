@@ -14,7 +14,4 @@ export class CreateTaskDto {
         example: 'high',
     })
     priority!: string;
-
-    @ApiProperty()
-    user_id!: number;
 }

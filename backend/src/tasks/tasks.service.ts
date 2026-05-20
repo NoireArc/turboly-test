@@ -1,24 +1,23 @@
 import { Injectable } from '@nestjs/common';
-
 import { DatabaseService } from 'src/database/database.services';
 
 @Injectable()
 export class TasksService {
-    constructor(private db: DatabaseService) { }
+    constructor(
+        private readonly db: DatabaseService,
+    ) { }
 
-    async createTask(body: any) {
-        await this.db.query(
-            `
-      INSERT INTO tasks
-      (title, description, due_date, priority, user_id)
-      VALUES (?, ?, ?, ?, ?)
-      `,
+    async createTask(
+        body: any,
+        userId: number,
+    ) {
+        await this.db.query(`INSERT INTO tasks (title, description, due_date, priority, user_id) VALUES (?, ?, ?, ?, ?)`,
             [
                 body.title,
                 body.description,
                 body.due_date,
                 body.priority,
-                body.user_id,
+                userId,
             ],
         );
 
@@ -27,53 +26,58 @@ export class TasksService {
         };
     }
 
-    async getTasks(sort?: string) {
+    async getTasks(
+        sort?: string,
+        userId?: number,
+    ) {
         const allowedSort = [
             'due_date',
             'priority',
             'title',
         ];
 
-        const sortField = allowedSort.includes(
-            sort || '',
-        )
-            ? sort
-            : 'due_date';
+        const sortField =
+            allowedSort.includes(sort || '')
+                ? sort
+                : 'due_date';
+
+        let query = `
+    SELECT * FROM tasks
+    WHERE user_id = ?
+    `;
+
+        if (sortField === 'priority') {
+            query += `
+        ORDER BY
+        CASE
+            WHEN priority = 'high' THEN 1
+            WHEN priority = 'medium' THEN 2
+            WHEN priority = 'low' THEN 3
+        END
+        `;
+        } else {
+            query += `
+        ORDER BY ${sortField} ASC
+        `;
+        }
 
         const [tasks] = await this.db.query(
-            `
-      SELECT * FROM tasks
-      ORDER BY ${sortField} ASC
-      `,
+            query,
+            [userId],
         );
 
         return tasks;
     }
 
-    async completeTask(id: string) {
-        await this.db.query(
-            `
-      UPDATE tasks
-      SET completed = NOT completed
-      WHERE id = ?
-      `,
-            [id],
-        );
-
+    async toggleTask(id: number) {
+        await this.db.query(`UPDATE tasks SET completed = NOT completed WHERE id = ?`, [id],);
         return {
             message: 'Task updated',
         };
     }
 
-    async deleteTask(id: string) {
-        await this.db.query(
-            `
-      DELETE FROM tasks
-      WHERE id = ?
-      `,
-            [id],
-        );
-
+    async deleteTask(id: number) {
+        await this.db.query(`DELETE FROM tasks WHERE id = ?`, [id],);
         return {
             message: 'Task deleted',
         };
