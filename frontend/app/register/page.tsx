@@ -1,30 +1,28 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { login } from "@/services/auth.services";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { register } from "@/services/auth.services";
 
-export default function LoginPage() {
+export default function RegisterPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     try {
       setLoading(true);
 
       setError("");
 
-      const data = await login(email, password);
+      await register(email, password);
 
-      localStorage.setItem("token", data.access_token);
-
-      router.push("/dashboard");
+      router.push("/");
     } catch (error) {
-      setError("Invalid credentials");
+      setError("Failed to register");
     } finally {
       setLoading(false);
     }
@@ -34,9 +32,9 @@ export default function LoginPage() {
     <main className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
       <div className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-3xl p-8 shadow-2xl">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white">Turboly Tasks</h1>
+          <h1 className="text-4xl font-bold text-white">Create Account</h1>
 
-          <p className="text-zinc-400 mt-2">Login to continue</p>
+          <p className="text-zinc-400 mt-2">Register to continue</p>
         </div>
 
         <div className="space-y-4">
@@ -71,22 +69,19 @@ export default function LoginPage() {
           )}
 
           <button
-            onClick={handleLogin}
+            onClick={handleRegister}
             disabled={loading}
             className="w-full bg-white text-black py-3 rounded-2xl font-semibold hover:opacity-90 transition disabled:opacity-50"
           >
-            {loading ? "Loading..." : "Login"}
+            {loading ? "Loading..." : "Register"}
           </button>
-          <div className="mt-6 text-center text-sm text-zinc-400">
-            Don't have an account?{" "}
-            <Link href="/register" className="text-white font-medium">
-              Register
-            </Link>
-          </div>
         </div>
 
-        <div className="mt-8 text-center text-sm text-zinc-500">
-          Task Management Coding Challenge
+        <div className="mt-6 text-center text-sm text-zinc-400">
+          Already have an account?{" "}
+          <Link href="/" className="text-white font-medium">
+            Login
+          </Link>
         </div>
       </div>
     </main>
